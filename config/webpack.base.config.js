@@ -5,14 +5,15 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin")
 const HtmlWebpackPlugin = require("html-webpack-plugin")
 const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const PurgeCSSPlugin = require("purgecss-webpack-plugin")
+const CopyPlugin = require("copy-webpack-plugin")
 
 function resolve(dir) {
   return path.join(__dirname, "..", dir)
 }
 
 const base = {
-  context: path.resolve(__dirname, '../'),
-  entry: resolve('/src/main.js'),
+  context: path.resolve(__dirname, "../"),
+  entry: resolve("/src/main.js"),
   output: {
     filename: "js/[name].js",
     path: resolve("/dist"),
@@ -21,7 +22,7 @@ const base = {
   resolve: {
     extensions: [".js", ".json", ".jsx", ".css", "scss"],
     alias: {
-      '@': resolve('src'),
+      "@": resolve("src"),
     },
   },
   module: {
@@ -73,7 +74,7 @@ const base = {
               minimize: {
                 removeComments: false,
                 collapseWhitespace: false,
-              }
+              },
             },
           },
         ],
@@ -88,6 +89,15 @@ const base = {
     new HtmlWebpackPlugin({
       filename: "index.html",
       template: resolve("/src/index.html"),
+    }),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: path.join(__dirname, "..", "/src/views/test/"),
+          to:  path.join(__dirname, "..", "dist/views"),
+          toType: "dir",
+        },
+      ],
     }),
     new CleanWebpackPlugin({ cleanAfterEveryBuildPatterns: ["dist"] }),
     new webpack.ProvidePlugin({
