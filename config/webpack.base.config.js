@@ -11,9 +11,42 @@ function resolve(dir) {
   return path.join(__dirname, "..", dir)
 }
 
+const entrys = {}
+const htmls = glob.sync("src/views/**/*.html")
+console.log(htmls, "1234")
+let HtmlPlugins = []
+htmls.forEach((html) => {
+  let htmlPath = html.split("/")
+  let file = htmlPath.pop()
+  let jsName = file.split(".")[0]
+  let moduleName = htmlPath[htmlPath.length - 1]
+  entrys[moduleName + "/" + moduleName + "_" + jsName] = path.resolve(
+    __dirname,
+    "../src/views/" + moduleName + "/js/" + jsName + ".js"
+  )
+  let htmlConfig = {
+    filename: "views/" + moduleName + "/" + file,
+    template: path.resolve(
+      __dirname,
+      "../src/views/" + moduleName + "/" + file
+    ),
+    showErrors: true,
+    inject: "body",
+    chunks: [moduleName + "/" + moduleName + "_" + jsName],
+    hash: true,
+    cache: true,
+  }
+  let htmlPlugin = new HtmlWebpackPlugin(htmlConfig)
+  HtmlPlugins.push(htmlPlugin)
+})
+entrys["index"] = resolve("/src/index.js")
+
+console.log(entrys, "entrys")
+console.log(HtmlPlugins, "HtmlPlugins")
+
 const base = {
   context: path.resolve(__dirname, "../"),
-  entry: resolve("/src/main.js"),
+  entry: entrys,
   output: {
     filename: "js/[name].js",
     path: resolve("/dist"),
@@ -86,19 +119,25 @@ const base = {
     ],
   },
   plugins: [
+    ...HtmlPlugins,
     new HtmlWebpackPlugin({
       filename: "index.html",
       template: resolve("/src/index.html"),
+      showErrors: true,
+      inject: "body",
+      chunks: ["index"],
+      hash: true,
+      cache: true,
     }),
-    new CopyPlugin({
-      patterns: [
-        {
-          from: path.join(__dirname, "..", "/src/views/test/"),
-          to:  path.join(__dirname, "..", "dist/views"),
-          toType: "dir",
-        },
-      ],
-    }),
+    // new CopyPlugin({
+    //   patterns: [
+    //     {
+    //       from: path.join(__dirname, "..", "/src/views/test/"),
+    //       to: path.join(__dirname, "..", "dist/views"),
+    //       toType: "dir",
+    //     },
+    //   ],
+    // }),
     new CleanWebpackPlugin({ cleanAfterEveryBuildPatterns: ["dist"] }),
     new webpack.ProvidePlugin({
       $: "jquery",
@@ -110,7 +149,7 @@ const base = {
       chunkFilename: "/css/[id].css",
     }),
     new PurgeCSSPlugin({
-      paths: glob.sync(path.join(__dirname, "src/*/*.html")),
+      paths: glob.sync(path.join(__dirname, "src/views/**/*.html")),
     }),
   ],
   externals: {},
